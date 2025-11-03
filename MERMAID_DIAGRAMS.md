@@ -20,21 +20,24 @@ graph TB
     
     subgraph API["API Layer"]
         I[Next.js API Routes] --> J[Pyth Entropy Endpoints]
-        I --> K[Deposit/Withdraw MON]
+        I --> K[Deposit/Withdraw MATIC]
         I --> L[Game Logic]
         I --> SAA[Smart Account API]
+        I --> LOG[Logging API]
     end
     
-    subgraph Gaming["Gaming Network - Monad Testnet"]
-        MT[Monad Testnet] --> MON[MON Token]
-        MT --> DEP[Deposits/Withdrawals]
-        MT --> SA_BATCH[Batch Transactions]
+    subgraph Banking["Banking Network - Polygon"]
+        POL[Polygon Mainnet] --> MATIC[MATIC Token]
+        POL --> DEP[Deposits/Withdrawals]
+        POL --> SA_BATCH[Batch Transactions]
+        POL --> LOGS[Game Logs & Events]
     end
     
-    subgraph Entropy["Entropy Network - Arbitrum Sepolia"]
+    subgraph Gaming["Gaming Network - Arbitrum Sepolia"]
         AS[Arbitrum Sepolia] --> N[CasinoEntropyConsumer]
         N --> O[Pyth Entropy]
         O --> P[Pyth Network]
+        AS --> GAME[Game Execution]
     end
     
     subgraph Data["Data Layer"]
@@ -46,12 +49,13 @@ graph TB
     
     A --> F
     B --> I
-    I --> MT
+    I --> POL
     I --> AS
     I --> Q
     I --> S
     N --> I
     SA --> SAA
+    LOGS --> LOG
 ```
 
 ## 🔄 Application Bootstrap Flow
@@ -96,8 +100,8 @@ flowchart TD
     I --> K
     
     K --> L{Network Check}
-    L -->|Monad Testnet| M[Connection Success]
-    L -->|Wrong Network| N[Switch to Monad Testnet]
+    L -->|Polygon Mainnet| M[Connection Success]
+    L -->|Wrong Network| N[Switch to Polygon Mainnet]
     
     N --> O{User Approves?}
     O -->|Yes| M
@@ -116,6 +120,7 @@ flowchart TD
     V --> X
     W --> X
     X --> Y[Enable Game Features]
+    X --> Z[Setup Cross-Chain Gaming]
 ```
 
 ## 🔷 Smart Account Detection & Features
@@ -159,7 +164,7 @@ graph TB
     end
 ```
 
-## �  Multi-Network Architecture (Monad + Arbitrum)
+## 🌐 Multi-Network Architecture (Polygon + Arbitrum)
 
 ```mermaid
 graph TB
@@ -172,14 +177,17 @@ graph TB
         F[Next.js Casino] --> WC[Wallet Connection]
         WC --> NS[Network Switcher]
         NS --> GM[Game Manager]
+        GM --> CM[Cross-Chain Manager]
     end
     
-    subgraph MonadNet["Monad Testnet (Chain ID: 10143)"]
-        MT[Monad Testnet] --> MON[MON Token]
-        MON --> DEP[Deposit Contract]
-        MON --> WITH[Withdraw Contract]
+    subgraph PolygonNet["Polygon Mainnet (Chain ID: 137)"]
+        POL[Polygon Mainnet] --> MATIC[MATIC Token]
+        MATIC --> DEP[Deposit Contract]
+        MATIC --> WITH[Withdraw Contract]
         DEP --> TB[Treasury Balance]
         WITH --> TB
+        POL --> LOGS[Game Logs Contract]
+        LOGS --> EVENTS[Game Events & History]
         
         subgraph SmartAccount["Smart Account Features"]
             BATCH[Batch Transactions]
@@ -192,6 +200,7 @@ graph TB
         AS[Arbitrum Sepolia] --> EC[Entropy Consumer]
         EC --> PE[Pyth Entropy Contract]
         PE --> PN[Pyth Network]
+        AS --> GAME[Game Execution Contract]
         
         subgraph EntropyFlow["Entropy Generation"]
             REQ[Request Entropy]
@@ -200,15 +209,24 @@ graph TB
         end
     end
     
+    subgraph CrossChain["Cross-Chain Communication"]
+        CC[Cross-Chain Bridge]
+        MSG[Message Passing]
+        SYNC[State Synchronization]
+    end
+    
     U --> F
-    F --> MT
+    F --> POL
     F --> AS
     GM --> DEP
     GM --> EC
+    CM --> CC
     SA --> BATCH
     REQ --> GEN
     GEN --> PROOF
-    PROOF --> GM
+    PROOF --> GAME
+    GAME --> MSG
+    MSG --> LOGS
 ```
 
 ## 🎲 Pyth Entropy Integration Architecture
@@ -240,17 +258,18 @@ graph LR
     K --> A
 ```
 
-## 🎮 Game Execution Flow (Smart Account Enhanced)
+## 🎮 Game Execution Flow (Cross-Chain Enhanced)
 
 ```mermaid
 sequenceDiagram
     participant U as User
     participant SA as Smart Account
     participant UI as Game UI
-    participant MT as Monad Testnet
+    participant POL as Polygon (Banking)
     participant API as API Route
     participant SC as Smart Contract (Arbitrum)
     participant PE as Pyth Entropy
+    participant LOG as Logging Contract (Polygon)
     participant DB as Database
     
     U->>SA: Initiate Game Session
@@ -258,11 +277,11 @@ sequenceDiagram
     
     alt Smart Account
         UI->>SA: Enable Batch Features
-        SA->>MT: Batch Bet Transactions
-        MT->>UI: Confirm Batch
+        SA->>POL: Batch Bet Transactions (MATIC)
+        POL->>UI: Confirm Batch
     else EOA Account
-        UI->>MT: Single Bet Transaction
-        MT->>UI: Confirm Single Bet
+        UI->>POL: Single Bet Transaction (MATIC)
+        POL->>UI: Confirm Single Bet
     end
     
     UI->>API: POST /api/generate-entropy
@@ -275,13 +294,17 @@ sequenceDiagram
     SC->>API: Event: EntropyFulfilled
     API->>DB: Store Game Result
     
+    Note over LOG: Log Game Events to Polygon
+    API->>LOG: Log Game Result & Stats
+    LOG->>POL: Store on Polygon Chain
+    
     alt Smart Account Batch
         API->>SA: Batch Results
-        SA->>MT: Process Batch Payouts
-        MT->>UI: Batch Payout Complete
+        SA->>POL: Process Batch Payouts (MATIC)
+        POL->>UI: Batch Payout Complete
     else Single Transaction
-        API->>MT: Single Payout
-        MT->>UI: Single Payout Complete
+        API->>POL: Single Payout (MATIC)
+        POL->>UI: Single Payout Complete
     end
     
     UI->>U: Display Outcome(s)
@@ -447,29 +470,47 @@ graph LR
     K --> R
 ```
 
-## 🔄 Request-Response Cycle
+## 🔄 Cross-Chain Request-Response Cycle
 
 ```mermaid
 sequenceDiagram
     participant U as User
     participant F as Frontend
     participant A as API
-    participant S as Smart Contract
+    participant POL as Polygon Contract
+    participant ARB as Arbitrum Contract
     participant PE as Pyth Entropy
+    participant LOG as Polygon Logging
     participant D as Database
     
     U->>F: Game Action
     F->>A: API Request
-    A->>S: Contract Call
-    S->>PE: Entropy Request
     
-    Note over PE: Generate Entropy
+    Note over A,POL: Banking on Polygon
+    A->>POL: Deposit/Bet (MATIC)
+    POL->>A: Transaction Confirmed
     
-    PE->>S: entropyCallback
-    S->>A: Event Emission
-    A->>D: Store Result
-    A->>F: Response
-    F->>U: Update UI
+    Note over A,ARB: Gaming on Arbitrum
+    A->>ARB: Game Execution Request
+    ARB->>PE: Entropy Request
+    
+    Note over PE: Generate Cryptographic Entropy
+    
+    PE->>ARB: entropyCallback
+    ARB->>A: Game Result Event
+    
+    Note over A,LOG: Logging on Polygon
+    A->>LOG: Log Game Event
+    LOG->>POL: Store Event Data
+    
+    A->>D: Store Result in DB
+    
+    Note over A,POL: Payout on Polygon
+    A->>POL: Process Payout (MATIC)
+    POL->>A: Payout Confirmed
+    
+    A->>F: Complete Response
+    F->>U: Update UI with Results
 ```
 
 ## 🔧 Development Workflow
@@ -653,26 +694,27 @@ graph TB
     end
 ```
 
-## 🔄 Smart Account Transaction Flow
+## 🔄 Cross-Chain Smart Account Transaction Flow
 
 ```mermaid
 sequenceDiagram
     participant U as User
     participant UI as Casino UI
     participant SA as Smart Account
-    participant MT as Monad Testnet
-    participant AS as Arbitrum Sepolia
+    participant POL as Polygon (Banking)
+    participant AS as Arbitrum Sepolia (Gaming)
     participant PE as Pyth Entropy
+    participant LOG as Polygon Logging
     
-    Note over U,PE: Smart Account Batch Gaming Session
+    Note over U,LOG: Cross-Chain Smart Account Gaming Session
     
     U->>UI: Select Multiple Games
     UI->>SA: Prepare Batch Transaction
     
     rect rgb(200, 255, 200)
-        Note over SA,MT: Batch Transaction on Monad
-        SA->>MT: Batch Bet Transaction
-        MT->>SA: Confirm All Bets
+        Note over SA,POL: Batch Banking on Polygon
+        SA->>POL: Batch Bet Transaction (MATIC)
+        POL->>SA: Confirm All Bets
     end
     
     rect rgb(200, 200, 255)
@@ -683,17 +725,118 @@ sequenceDiagram
         AS->>UI: All Game Results
     end
     
+    rect rgb(255, 255, 200)
+        Note over LOG,POL: Logging on Polygon
+        UI->>LOG: Log All Game Events
+        LOG->>POL: Store Game History
+    end
+    
     rect rgb(255, 200, 200)
-        Note over SA,MT: Batch Payout on Monad
+        Note over SA,POL: Batch Payout on Polygon
         UI->>SA: Process Batch Payouts
-        SA->>MT: Batch Payout Transaction
-        MT->>SA: Confirm All Payouts
+        SA->>POL: Batch Payout Transaction (MATIC)
+        POL->>SA: Confirm All Payouts
     end
     
     SA->>UI: Update All Game States
     UI->>U: Display All Results
     
-    Note over U,PE: Single transaction for multiple games!
+    Note over U,LOG: Banking on Polygon, Gaming on Arbitrum!
+```
+
+## 🌉 Cross-Chain Gaming Architecture
+
+```mermaid
+graph TB
+    subgraph UserInterface["User Interface Layer"]
+        UI[Casino Frontend] --> WM[Wallet Manager]
+        WM --> NM[Network Manager]
+        NM --> CM[Chain Manager]
+    end
+    
+    subgraph PolygonChain["Polygon Mainnet - Banking Layer"]
+        POL_NET[Polygon Network] --> MATIC_TOKEN[MATIC Token]
+        POL_NET --> DEPOSIT_CONTRACT[Deposit Contract]
+        POL_NET --> WITHDRAW_CONTRACT[Withdraw Contract]
+        POL_NET --> LOGGING_CONTRACT[Game Logging Contract]
+        
+        MATIC_TOKEN --> TREASURY[Treasury Pool]
+        DEPOSIT_CONTRACT --> TREASURY
+        WITHDRAW_CONTRACT --> TREASURY
+        
+        LOGGING_CONTRACT --> GAME_EVENTS[Game Events Storage]
+        LOGGING_CONTRACT --> USER_STATS[User Statistics]
+        LOGGING_CONTRACT --> AUDIT_TRAIL[Audit Trail]
+    end
+    
+    subgraph ArbitrumChain["Arbitrum Sepolia - Gaming Layer"]
+        ARB_NET[Arbitrum Network] --> ENTROPY_CONTRACT[Casino Entropy Consumer]
+        ARB_NET --> GAME_CONTRACTS[Game Logic Contracts]
+        
+        ENTROPY_CONTRACT --> PYTH_ENTROPY[Pyth Entropy Service]
+        PYTH_ENTROPY --> RANDOM_GENERATION[Cryptographic Randomness]
+        
+        GAME_CONTRACTS --> MINES_GAME[Mines Game Logic]
+        GAME_CONTRACTS --> PLINKO_GAME[Plinko Game Logic]
+        GAME_CONTRACTS --> ROULETTE_GAME[Roulette Game Logic]
+        GAME_CONTRACTS --> WHEEL_GAME[Wheel Game Logic]
+    end
+    
+    subgraph CrossChainBridge["Cross-Chain Communication"]
+        BRIDGE[Message Bridge] --> STATE_SYNC[State Synchronization]
+        BRIDGE --> EVENT_RELAY[Event Relay Service]
+        BRIDGE --> BALANCE_SYNC[Balance Synchronization]
+    end
+    
+    UI --> POL_NET
+    UI --> ARB_NET
+    CM --> BRIDGE
+    
+    RANDOM_GENERATION --> EVENT_RELAY
+    EVENT_RELAY --> LOGGING_CONTRACT
+    
+    TREASURY --> BALANCE_SYNC
+    BALANCE_SYNC --> GAME_CONTRACTS
+```
+
+## 💰 MATIC Token Flow Architecture
+
+```mermaid
+graph LR
+    subgraph UserWallet["User Wallet"]
+        USER[User] --> WALLET[MetaMask/Smart Account]
+        WALLET --> MATIC_BALANCE[MATIC Balance]
+    end
+    
+    subgraph DepositFlow["Deposit Flow"]
+        MATIC_BALANCE --> APPROVE[Approve MATIC]
+        APPROVE --> DEPOSIT[Deposit to Casino]
+        DEPOSIT --> TREASURY_DEPOSIT[Treasury Pool]
+    end
+    
+    subgraph GamingFlow["Gaming Flow"]
+        TREASURY_DEPOSIT --> BET_PLACEMENT[Place Bets]
+        BET_PLACEMENT --> GAME_EXECUTION[Execute Games on Arbitrum]
+        GAME_EXECUTION --> RESULTS[Game Results]
+    end
+    
+    subgraph PayoutFlow["Payout Flow"]
+        RESULTS --> WIN_CHECK{Win/Loss?}
+        WIN_CHECK -->|Win| PAYOUT[Calculate Payout]
+        WIN_CHECK -->|Loss| HOUSE_EDGE[House Edge]
+        
+        PAYOUT --> TREASURY_PAYOUT[Treasury Payout]
+        TREASURY_PAYOUT --> WITHDRAW_REQUEST[Withdraw Request]
+        WITHDRAW_REQUEST --> MATIC_TRANSFER[Transfer MATIC]
+        MATIC_TRANSFER --> WALLET
+    end
+    
+    subgraph LoggingFlow["Logging Flow"]
+        RESULTS --> LOG_EVENT[Log to Polygon]
+        HOUSE_EDGE --> LOG_EVENT
+        PAYOUT --> LOG_EVENT
+        LOG_EVENT --> POLYGON_LOGS[Polygon Event Logs]
+    end
 ```
 
 ## 📊 Performance Comparison: EOA vs Smart Account
