@@ -181,13 +181,6 @@ export default function GameHistory({ history }) {
                     ) : (
                       <div className="flex gap-1">
                         <button
-                          onClick={() => openArbiscan(game.id)}
-                          className="flex items-center gap-1 px-2 py-1 bg-blue-500/10 border border-blue-500/30 rounded text-blue-400 text-xs hover:bg-blue-500/20 transition-colors"
-                        >
-                          <FaExternalLinkAlt size={8} />
-                          Arbiscan
-                        </button>
-                        <button
                           onClick={() => openEntropyExplorer(game.id)}
                           className="flex items-center gap-1 px-2 py-1 bg-[#681DDB]/10 border border-[#681DDB]/30 rounded text-[#681DDB] text-xs hover:bg-[#681DDB]/20 transition-colors"
                         >
@@ -199,7 +192,7 @@ export default function GameHistory({ history }) {
                           className="flex items-center gap-1 px-2 py-1 bg-[#8B2398]/10 border border-[#8B2398]/30 rounded text-[#8B2398] text-xs hover:bg-[#8B2398]/20 transition-colors"
                         >
                           <FaExternalLinkAlt size={8} />
-                          Monad
+                          Polygon
                         </button>
                       </div>
                     )}
