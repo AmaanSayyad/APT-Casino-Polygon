@@ -1,14 +1,14 @@
 # APT Casino - Polygon Amoy
 
-A decentralized casino platform built on Polygon Amoy Testnet with Pyth Entropy (via Arbitrum Sepolia) for provably fair gaming and MetaMask Smart Accounts integration.
+A decentralized casino platform built on Polygon Amoy Testnet with Pyth Entropy (via Arbitrum Sepolia) for provably fair gaming/gambling
 
 ## 🎮 The Story Behind APT Casino
 
-A few days ago, I was exploring transactions on Etherscan when I saw an advertisement for a popular centralized casino platform offering a 200% bonus on first deposits. I deposited 120 USDT and received 360 USDT in total balance in their custodial wallet.
+A few days ago, I was exploring some transactions on Etherscan, where I saw an advertisement of https://stake.com/ offering a 200% bonus on first deposits. I deposited 120 USDT and received 360 USDT in total balance in their custodial wallet.
 
 When I started playing, I discovered I could only bet $1 per game and couldn't increase the amount. After contacting customer support, I learned I had been trapped by hidden "wager limits" tied to the bonus scheme. To withdraw my original deposit, I would need to play $12,300 worth of games!
 
-In a desperate attempt to recover my funds, I played different games all night—roulette, mines, spin wheel—and lost everything.
+In a desperate attempt to recover my funds, I played different games all night - roulette, mines, spin wheel and lost everything.
 
 This frustrating experience inspired APT Casino: a combination of GameFi, AI, and DeFi where users can enjoy casino games in a safe, secure, and transparent environment that doesn't scam its users.
 
@@ -91,14 +91,6 @@ APT Casino addresses these problems by offering:
 3. **Deposit**: Deposit POL to your house balance
 4. **Play**: Start playing provably fair games!
 
-### Network Configuration
-
-Add Polygon Amoy Testnet to MetaMask:
-- **Network Name**: Polygon Amoy
-- **RPC URL**: `https://rpc-amoy.polygon.technology`
-- **Chain ID**: `80002`
-- **Currency Symbol**: `POL`
-- **Block Explorer**: `https://amoy.polygonscan.com`
 
 ## 🔷 Smart Account Features
 
@@ -140,76 +132,6 @@ const executeBatchBets = async (bets) => {
 ## 🏗 System Architecture Overview
 <img width="1540" height="695" alt="Screenshot 2025-10-22 at 11 11 56 PM" src="https://github.com/user-attachments/assets/f8d4e99d-d31b-4a81-b924-5fc1d8dade78" />
 
-```mermaid
-graph TB
-    subgraph Frontend["Frontend Layer"]
-        A[Next.js App] --> B[React Components]
-        B --> C[Three.js Games]
-        B --> D[Material-UI]
-        B --> E[RainbowKit + MetaMask Smart Accounts]
-        E --> SA[Smart Account Detection]
-        B --> LS[Livepeer Streaming]
-        B --> CC[Community Chat]
-    end
-    
-    subgraph State["State Management"]
-        F[Redux Store] --> G[React Query]
-        G --> H[Local State]
-        H --> SAH[Smart Account Hook]
-    end
-    
-    subgraph API["API Layer"]
-        I[Next.js API Routes] --> J[Pyth Entropy Endpoints]
-        I --> K[Deposit/Withdraw MON]
-        I --> L[Game Logic]
-        I --> SAA[Smart Account API]
-        I --> SC[Socket.IO Chat]
-        I --> LP[Livepeer API]
-    end
-    
-    subgraph Gaming["Gaming Network - Monad Testnet"]
-        MT[Monad Testnet] --> MON[MON Token]
-        MT --> DEP[Deposits/Withdrawals]
-        MT --> SA_BATCH[Batch Transactions]
-        MT --> GAS[Gasless Transactions]
-    end
-    
-    subgraph Entropy["Entropy Network - Arbitrum Sepolia"]
-        AS[Arbitrum Sepolia] --> N[CasinoEntropyConsumer]
-        N --> O[Pyth Entropy]
-        O --> P[Pyth Network]
-    end
-    
-    subgraph Data["Data Layer"]
-        Q[PostgreSQL] --> R[User Data]
-        Q --> CH[Chat History]
-        Q --> PF[Player Profiles]
-        S[Redis Cache] --> T[Session Data]
-        S --> U[Game State]
-        S --> SAC[Smart Account Cache]
-        S --> LV[Live Streams]
-    end
-    
-    subgraph Social["Social Layer"]
-        LP[Livepeer] --> ST[Streaming]
-        SB[Supabase] --> RT[Real-time Chat]
-        SIO[Socket.IO] --> MS[Message Signing]
-    end
-    
-    A --> F
-    B --> I
-    I --> MT
-    I --> AS
-    I --> Q
-    I --> S
-    N --> I
-    SA --> SAA
-    CC --> SC
-    LS --> LP
-    SC --> SB
-    SC --> SIO
-    LP --> ST
-```
 
 ## 🔗 Wallet Connection & Smart Account Flow
 
@@ -231,8 +153,8 @@ flowchart TD
     I --> K
     
     K --> L{Network Check}
-    L -->|Monad Testnet| M[Connection Success]
-    L -->|Wrong Network| N[Switch to Monad Testnet]
+    L -->|Polygon Amoy| M[Connection Success]
+    L -->|Wrong Network| N[Switch to Polygon Amoy]
     
     N --> O{User Approves?}
     O -->|Yes| M
@@ -251,99 +173,6 @@ flowchart TD
     V --> X
     W --> X
     X --> Y[Enable Game Features]
-```
-
-## 🔷 Smart Account Detection & Features
-
-```mermaid
-graph TB
-    subgraph Detection["Account Detection"]
-        A[Connected Wallet] --> B[Get Bytecode]
-        B --> C{Has Contract Code?}
-        C -->|Yes| D[Smart Account]
-        C -->|No| E[EOA Account]
-    end
-    
-    subgraph SmartFeatures["Smart Account Features"]
-        D --> F[Batch Transactions]
-        D --> G[Sponsored Transactions]
-        D --> H[Session Keys]
-        D --> I[Social Recovery]
-    end
-    
-    subgraph CasinoFeatures["Casino Benefits"]
-        F --> J[Multi-Bet in One TX]
-        G --> K[Gasless Gaming]
-        H --> L[Auto-Play Sessions]
-        I --> M[Account Recovery]
-    end
-    
-    subgraph EOAFeatures["EOA Features"]
-        E --> N[Standard Transactions]
-        E --> O[Manual Signing]
-        N --> P[Single Bet per TX]
-        O --> Q[Manual Confirmations]
-    end
-    
-    subgraph UI["User Interface"]
-        J --> R[Enhanced Game UI]
-        K --> R
-        L --> R
-        P --> S[Standard Game UI]
-        Q --> S
-    end
-```
-
-## 🌐 Multi-Network Architecture (Monad + Arbitrum)
-
-```mermaid
-graph TB
-    subgraph User["User Layer"]
-        U[User] --> W[MetaMask Wallet]
-        W --> SA[Smart Account Detection]
-    end
-    
-    subgraph Frontend["Frontend Application"]
-        F[Next.js Casino] --> WC[Wallet Connection]
-        WC --> NS[Network Switcher]
-        NS --> GM[Game Manager]
-    end
-    
-    subgraph MonadNet["Monad Testnet (Chain ID: 10143)"]
-        MT[Monad Testnet] --> MON[MON Token]
-        MON --> DEP[Deposit Contract]
-        MON --> WITH[Withdraw Contract]
-        DEP --> TB[Treasury Balance]
-        WITH --> TB
-        
-        subgraph SmartAccount["Smart Account Features"]
-            BATCH[Batch Transactions]
-            SPONSOR[Sponsored TX]
-            SESSION[Session Keys]
-        end
-    end
-    
-    subgraph ArbitrumNet["Arbitrum Sepolia (Chain ID: 421614)"]
-        AS[Arbitrum Sepolia] --> EC[Entropy Consumer]
-        EC --> PE[Pyth Entropy Contract]
-        PE --> PN[Pyth Network]
-        
-        subgraph EntropyFlow["Entropy Generation"]
-            REQ[Request Entropy]
-            GEN[Generate Random]
-            PROOF[Cryptographic Proof]
-        end
-    end
-    
-    U --> F
-    F --> MT
-    F --> AS
-    GM --> DEP
-    GM --> EC
-    SA --> BATCH
-    REQ --> GEN
-    GEN --> PROOF
-    PROOF --> GM
 ```
 
 ## 🎲 Pyth Entropy Integration Architecture
@@ -382,7 +211,7 @@ sequenceDiagram
     participant U as User
     participant SA as Smart Account
     participant UI as Game UI
-    participant MT as Monad Testnet
+    participant PA as Polygon Amoy
     participant API as API Route
     participant SC as Smart Contract (Arbitrum)
     participant PE as Pyth Entropy
@@ -394,11 +223,11 @@ sequenceDiagram
     
     alt Smart Account
         UI->>SA: Enable Batch Features
-        SA->>MT: Batch Bet Transactions
-        MT->>UI: Confirm Batch
+        SA->>PA: Batch Bet Transactions
+        PA->>UI: Confirm Batch
     else EOA Account
-        UI->>MT: Single Bet Transaction
-        MT->>UI: Confirm Single Bet
+        UI->>PA: Single Bet Transaction
+        PA->>UI: Confirm Single Bet
     end
     
     UI->>API: POST /api/generate-entropy
@@ -413,11 +242,11 @@ sequenceDiagram
     
     alt Smart Account Batch
         API->>SA: Batch Results
-        SA->>MT: Process Batch Payouts
-        MT->>UI: Batch Payout Complete
+        SA->>PA: Process Batch Payouts
+        PA->>UI: Batch Payout Complete
     else Single Transaction
-        API->>MT: Single Payout
-        MT->>UI: Single Payout Complete
+        API->>PA: Single Payout
+        PA->>UI: Single Payout Complete
     end
     
     UI->>U: Display Outcome(s)
@@ -483,7 +312,7 @@ sequenceDiagram
     participant U as User
     participant UI as Casino UI
     participant SA as Smart Account
-    participant MT as Monad Testnet
+    participant PA as Polygon Amoy
     participant AS as Arbitrum Sepolia
     participant PE as Pyth Entropy
     
@@ -492,9 +321,9 @@ sequenceDiagram
     U->>UI: Select Multiple Games
     UI->>SA: Prepare Batch Transaction
     
-    Note over SA,MT: Batch Transaction on Monad
-    SA->>MT: Batch Bet Transaction
-    MT->>SA: Confirm All Bets
+    Note over SA,PA: Batch Transaction on Polygon
+    SA->>PA: Batch Bet Transaction
+    PA->>SA: Confirm All Bets
     
     Note over AS,PE: Entropy Generation on Arbitrum
     UI->>AS: Request Entropy for All Games
@@ -502,10 +331,10 @@ sequenceDiagram
     PE->>AS: Return Entropy Proofs
     AS->>UI: All Game Results
     
-    Note over SA,MT: Batch Payout on Monad
+    Note over SA,PA: Batch Payout on Polygon
     UI->>SA: Process Batch Payouts
-    SA->>MT: Batch Payout Transaction
-    MT->>SA: Confirm All Payouts
+    SA->>PA: Batch Payout Transaction
+    PA->>SA: Confirm All Payouts
     
     SA->>UI: Update All Game States
     UI->>U: Display All Results
@@ -543,16 +372,14 @@ flowchart TD
 - **Mainnet Launch**: Deploying on mainnet for real-world use
 - **Additional Games**: Expanding the game selection
 - **Enhanced DeFi Features**: Staking, farming, yield strategies
-- **Developer Platform**: Allowing third-party game development
+- **Developer Platform**: Allowing third-party game development and acting as a gaming hub/ gambling launchpad
 - **Advanced Social Features**: Enhanced live streaming and chat capabilities
 - **ROI Share Links**: Shareable proof-links for withdrawals that render dynamic cards on social platforms
-- **Expanded Smart Account Features**: More delegation options
 - **Tournament System**: Competitive gaming with leaderboards and prizes
-- **Provably Fair**: All randomness verified on-chain via Pyth Entropy
 - **Non-custodial**: Users maintain full control of their funds
 - **Transparent**: All game logic and outcomes are verifiable
 
 ## 🔗 Links
 
-- **Live Demo**: [https://apt-casino-monad.vercel.app](https://apt-casino-monad.vercel.app)
-- **Pitch Deck**: [https://www.figma.com/deck/VKHErF5fQr9JVOvjn9VWg3/APT-Casino-Monad?node-id=1-1812&p=f&t=ayEzRDoZZrC2bNfR-1&scaling=min-zoom&content-scaling=fixed&page-id=0%3A1](https://www.figma.com/deck/VKHErF5fQr9JVOvjn9VWg3/APT-Casino-Monad?node-id=1-1812&p=f&t=ayEzRDoZZrC2bNfR-1&scaling=min-zoom&content-scaling=fixed&page-id=0%3A1)
+- **Live Demo**: https://apt-casino-polygon.vercel.app
+- **Pitch Deck**: https://www.figma.com/slides/rj3GKnMatIQQeTXLOrqWNK/APT-Casino-Polygon?node-id=0-1&t=xLmlQt2ZqR5Wugay-1
