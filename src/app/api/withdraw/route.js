@@ -1,15 +1,15 @@
 import { NextResponse } from 'next/server';
 import { ethers } from 'ethers';
 
-// Monad Treasury private key from environment
-const MONAD_TREASURY_PRIVATE_KEY = process.env.MONAD_TREASURY_PRIVATE_KEY || process.env.TREASURY_PRIVATE_KEY || "0x73e0cfb4d786d6e542533e18eb78fb5c727ab802b89c6850962042a8f0835f0c";
+// Polygon Amoy Treasury private key from environment
+const POLYGON_TREASURY_PRIVATE_KEY = process.env.POLYGON_TREASURY_PRIVATE_KEY || process.env.TREASURY_PRIVATE_KEY;
 
-// Monad Testnet RPC URL
-const MONAD_TESTNET_RPC = process.env.NEXT_PUBLIC_0G_GALILEO_RPC || 'https://testnet-rpc.monad.xyz';
+// Polygon Amoy Testnet RPC URL
+const POLYGON_AMOY_RPC = process.env.NEXT_PUBLIC_POLYGON_AMOY_RPC || 'https://rpc-amoy.polygon.technology';
 
 // Create provider and wallet
-const provider = new ethers.JsonRpcProvider(MONAD_TESTNET_RPC);
-const treasuryWallet = new ethers.Wallet(MONAD_TREASURY_PRIVATE_KEY, provider);
+const provider = new ethers.JsonRpcProvider(POLYGON_AMOY_RPC);
+const treasuryWallet = POLYGON_TREASURY_PRIVATE_KEY ? new ethers.Wallet(POLYGON_TREASURY_PRIVATE_KEY, provider) : null;
 
 export async function POST(request) {
   try {
@@ -29,15 +29,15 @@ export async function POST(request) {
       });
     }
 
-    if (!MONAD_TREASURY_PRIVATE_KEY) {
+    if (!POLYGON_TREASURY_PRIVATE_KEY || !treasuryWallet) {
       return NextResponse.json(
-        { error: 'Treasury not configured' },
+        { error: 'Treasury not configured. Please set POLYGON_TREASURY_PRIVATE_KEY environment variable.' },
         { status: 500 }
       );
     }
 
     console.log(`🏦 Processing withdrawal: ${amount} MATIC to ${userAddress}`);
-    console.log(`📍 Treasury: ${treasuryWallet.address}`);
+    console.log(`📍 Treasury: ${treasuryWallet?.address || 'Not configured'}`);
 
     // Check treasury balance
     let treasuryBalance = 0;
@@ -94,7 +94,8 @@ export async function POST(request) {
       userAddress: userAddress,
       treasuryAddress: treasuryWallet.address,
       status: 'pending',
-      message: 'Transaction sent successfully. Check Etherscan for confirmation.'
+      message: 'Transaction sent successfully. Check PolygonScan for confirmation.',
+      explorerUrl: `https://amoy.polygonscan.com/tx/${tx.hash}`
     }), {
       status: 200,
       headers: {
@@ -128,34 +129,33 @@ export async function POST(request) {
 // GET endpoint to check treasury balance
 export async function GET() {
   try {
-    if (!MONAD_TREASURY_PRIVATE_KEY) {
+    if (!POLYGON_TREASURY_PRIVATE_KEY || !treasuryWallet) {
       return NextResponse.json(
         { error: 'Treasury not configured' },
         { status: 500 }
       );
     }
 
-    const treasuryAccount = new EthereumAccount(
-      new Uint8Array(Buffer.from(MONAD_TREASURY_PRIVATE_KEY.slice(2), 'hex'))
-    );
-
-    const coinClient = new CoinClient(client);
-
     try {
-      const balance = await coinClient.checkBalance(treasuryAccount);
+      const balance = await provider.getBalance(treasuryWallet.address);
+      const balanceInMatic = ethers.formatEther(balance);
 
       return NextResponse.json({
-        treasuryAddress: treasuryAccount.address().hex(),
-        balance: balance / 100000000, // Convert to MATIC balanceOctas: balance.toString(),
-        status: 'active'
+        treasuryAddress: treasuryWallet.address,
+        balance: parseFloat(balanceInMatic),
+        balanceWei: balance.toString(),
+        status: 'active',
+        network: 'Polygon Amoy'
       });
     } catch (balanceError) {
+      console.error('Balance check error:', balanceError);
       return NextResponse.json({
-        treasuryAddress: treasuryAccount.address().hex(),
+        treasuryAddress: treasuryWallet.address,
         balance: 0,
-        balanceOctas: '0',
-        status: 'initializing',
-        note: 'Treasury wallet is being initialized. Please wait a few minutes.'
+        balanceWei: '0',
+        status: 'error',
+        error: balanceError.message,
+        network: 'Polygon Amoy'
       });
     }
 
