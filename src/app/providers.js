@@ -82,82 +82,88 @@ const muiTheme = createTheme({
   },
 });
 
+// Create config outside component to avoid SSR issues
+let wagmiConfig = null;
+
+function createWagmiConfig() {
+  if (wagmiConfig) {
+    return wagmiConfig;
+  }
+
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  // Debug logging
+  console.log('🔧 Creating Wagmi config...');
+  console.log('🔧 Project ID: 226b43b703188d269fb70d02c107c34e');
+
+  try {
+    wagmiConfig = getDefaultConfig({
+      appName: 'APT Casino Polygon',
+      projectId: '226b43b703188d269fb70d02c107c34e',
+      chains: [polygonAmoy],
+      ssr: true,
+    });
+    console.log('🔧 Config created with getDefaultConfig:', wagmiConfig);
+  } catch (error) {
+    console.error('❌ Error creating config with getDefaultConfig:', error);
+    
+    // Fallback to manual config with MetaMask Smart Accounts support
+    const connectors = connectorsForWallets([
+      {
+        groupName: 'Recommended',
+        wallets: [
+          metaMaskWallet({
+            projectId: '226b43b703188d269fb70d02c107c34e',
+            // Enable Smart Accounts support
+            options: {
+              enableSmartAccounts: true,
+            }
+          }),
+          walletConnectWallet,
+          injectedWallet,
+        ],
+      },
+      {
+        groupName: 'Other',
+        wallets: [
+          rainbowWallet,
+          coinbaseWallet,
+          trustWallet,
+        ],
+      },
+    ], {
+      appName: 'APT Casino Polygon',
+      projectId: '226b43b703188d269fb70d02c107c34e',
+    });
+
+    wagmiConfig = createConfig({
+      connectors,
+      chains: [polygonAmoy],
+      transports: {
+        [polygonAmoy.id]: http(),
+      },
+      ssr: true,
+    });
+    console.log('🔧 Config created with manual setup:', wagmiConfig);
+  }
+
+  return wagmiConfig;
+}
+
 export default function Providers({ children }) {
   const [mounted, setMounted] = React.useState(false);
+  const [config, setConfig] = React.useState(null);
 
   React.useEffect(() => {
     setMounted(true);
+    // Create config only after mount
+    const wagmiConfig = createWagmiConfig();
+    setConfig(wagmiConfig);
   }, []);
 
-  // Create config only on client side using useMemo
-  const config = React.useMemo(() => {
-    // Only create config on client side
-    if (typeof window === 'undefined') {
-      return null;
-    }
-
-    // Debug logging
-    console.log('🔧 Providers mounting...');
-    console.log('🔧 Project ID: 226b43b703188d269fb70d02c107c34e');
-
-    // RainbowKit configuration for Polygon Amoy Testnet
-    let wagmiConfig;
-    
-    try {
-      wagmiConfig = getDefaultConfig({
-        appName: 'APT Casino Polygon',
-        projectId: '226b43b703188d269fb70d02c107c34e',
-        chains: [polygonAmoy],
-        ssr: true,
-      });
-      console.log('🔧 Config created with getDefaultConfig:', wagmiConfig);
-    } catch (error) {
-      console.error('❌ Error creating config with getDefaultConfig:', error);
-      
-      // Fallback to manual config with MetaMask Smart Accounts support
-      const connectors = connectorsForWallets([
-        {
-          groupName: 'Recommended',
-          wallets: [
-            metaMaskWallet({
-              projectId: '226b43b703188d269fb70d02c107c34e',
-              // Enable Smart Accounts support
-              options: {
-                enableSmartAccounts: true,
-              }
-            }),
-            walletConnectWallet,
-            injectedWallet,
-          ],
-        },
-        {
-          groupName: 'Other',
-          wallets: [
-            rainbowWallet,
-            coinbaseWallet,
-            trustWallet,
-          ],
-        },
-      ], {
-        appName: 'APT Casino Polygon',
-        projectId: '226b43b703188d269fb70d02c107c34e',
-      });
-
-      wagmiConfig = createConfig({
-        connectors,
-        chains: [polygonAmoy],
-        transports: {
-          [polygonAmoy.id]: http(),
-        },
-        ssr: true,
-      });
-      console.log('🔧 Config created with manual setup:', wagmiConfig);
-    }
-
-    return wagmiConfig;
-  }, []);
-
-  // Prevent hydration mismatch by not rendering until mounted
+  // Prevent hydration mismatch by not rendering until mounted and config is ready
   if (!mounted || !config) {
     return (
       <div style={{ 
