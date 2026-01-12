@@ -89,8 +89,76 @@ export default function Providers({ children }) {
     setMounted(true);
   }, []);
 
+  // Create config only on client side using useMemo
+  const config = React.useMemo(() => {
+    // Only create config on client side
+    if (typeof window === 'undefined') {
+      return null;
+    }
+
+    // Debug logging
+    console.log('🔧 Providers mounting...');
+    console.log('🔧 Project ID: 226b43b703188d269fb70d02c107c34e');
+
+    // RainbowKit configuration for Polygon Amoy Testnet
+    let wagmiConfig;
+    
+    try {
+      wagmiConfig = getDefaultConfig({
+        appName: 'APT Casino Polygon',
+        projectId: '226b43b703188d269fb70d02c107c34e',
+        chains: [polygonAmoy],
+        ssr: true,
+      });
+      console.log('🔧 Config created with getDefaultConfig:', wagmiConfig);
+    } catch (error) {
+      console.error('❌ Error creating config with getDefaultConfig:', error);
+      
+      // Fallback to manual config with MetaMask Smart Accounts support
+      const connectors = connectorsForWallets([
+        {
+          groupName: 'Recommended',
+          wallets: [
+            metaMaskWallet({
+              projectId: '226b43b703188d269fb70d02c107c34e',
+              // Enable Smart Accounts support
+              options: {
+                enableSmartAccounts: true,
+              }
+            }),
+            walletConnectWallet,
+            injectedWallet,
+          ],
+        },
+        {
+          groupName: 'Other',
+          wallets: [
+            rainbowWallet,
+            coinbaseWallet,
+            trustWallet,
+          ],
+        },
+      ], {
+        appName: 'APT Casino Polygon',
+        projectId: '226b43b703188d269fb70d02c107c34e',
+      });
+
+      wagmiConfig = createConfig({
+        connectors,
+        chains: [polygonAmoy],
+        transports: {
+          [polygonAmoy.id]: http(),
+        },
+        ssr: true,
+      });
+      console.log('🔧 Config created with manual setup:', wagmiConfig);
+    }
+
+    return wagmiConfig;
+  }, []);
+
   // Prevent hydration mismatch by not rendering until mounted
-  if (!mounted) {
+  if (!mounted || !config) {
     return (
       <div style={{ 
         display: 'flex', 
@@ -102,64 +170,6 @@ export default function Providers({ children }) {
         <div style={{ color: 'white', fontSize: '18px' }}>Loading...</div>
       </div>
     );
-  }
-
-  // Debug logging
-  console.log('🔧 Providers mounting...');
-  console.log('🔧 Project ID: 226b43b703188d269fb70d02c107c34e');
-
-  // RainbowKit configuration for Polygon Amoy Testnet
-  let config;
-  
-  try {
-    config = getDefaultConfig({
-      appName: 'APT Casino Polygon',
-      projectId: '226b43b703188d269fb70d02c107c34e',
-      chains: [polygonAmoy],
-      ssr: true,
-    });
-    console.log('🔧 Config created with getDefaultConfig:', config);
-  } catch (error) {
-    console.error('❌ Error creating config with getDefaultConfig:', error);
-    
-    // Fallback to manual config with MetaMask Smart Accounts support
-    const connectors = connectorsForWallets([
-      {
-        groupName: 'Recommended',
-        wallets: [
-          metaMaskWallet({
-            projectId: '226b43b703188d269fb70d02c107c34e',
-            // Enable Smart Accounts support
-            options: {
-              enableSmartAccounts: true,
-            }
-          }),
-          walletConnectWallet,
-          injectedWallet,
-        ],
-      },
-      {
-        groupName: 'Other',
-        wallets: [
-          rainbowWallet,
-          coinbaseWallet,
-          trustWallet,
-        ],
-      },
-    ], {
-      appName: 'APT Casino Polygon',
-      projectId: '226b43b703188d269fb70d02c107c34e',
-    });
-
-    config = createConfig({
-      connectors,
-      chains: [polygonAmoy],
-      transports: {
-        [polygonAmoy.id]: http(),
-      },
-      ssr: true,
-    });
-    console.log('🔧 Config created with manual setup:', config);
   }
 
   return (
