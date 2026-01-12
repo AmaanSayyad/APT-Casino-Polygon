@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useMemo, lazy, Suspense } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Box, Typography, Container, Grid, Paper, Avatar, Tabs, Tab, Button, Tooltip, LinearProgress } from '@mui/material';
 import Image from 'next/image';
 import { FaChartLine, FaInfoCircle, FaHistory, FaQuestionCircle, FaTrophy, FaFire, FaCoins, FaChartBar, FaClock, FaPlayCircle } from 'react-icons/fa';
@@ -26,6 +26,29 @@ const a11yProps = (index) => ({
 // Custom YouTube video component
 const YouTubeVideo = ({ videoUrl }) => {
   if (!videoUrl) return null;
+  
+  // Construct proper YouTube embed URL
+  // Handle both video IDs and full URLs
+  let embedUrl = videoUrl;
+  if (!videoUrl.includes('youtube.com') && !videoUrl.includes('youtu.be')) {
+    // It's just a video ID, construct the embed URL
+    // Remove any query parameters from the video ID (e.g., "AbaVLveTcrM?si" -> "AbaVLveTcrM")
+    const videoId = videoUrl.split('?')[0].split('&')[0];
+    embedUrl = `https://www.youtube.com/embed/${videoId}`;
+  } else if (videoUrl.includes('youtube.com/watch')) {
+    // Extract video ID from full YouTube URL
+    const urlParams = new URLSearchParams(videoUrl.split('?')[1] || '');
+    const videoId = urlParams.get('v') || videoUrl.split('v=')[1]?.split('&')[0];
+    if (videoId) {
+      embedUrl = `https://www.youtube.com/embed/${videoId}`;
+    }
+  } else if (videoUrl.includes('youtu.be/')) {
+    // Extract video ID from short YouTube URL
+    const videoId = videoUrl.split('youtu.be/')[1]?.split('?')[0];
+    if (videoId) {
+      embedUrl = `https://www.youtube.com/embed/${videoId}`;
+    }
+  }
   
   return (
     <Box
@@ -118,8 +141,8 @@ const YouTubeVideo = ({ videoUrl }) => {
           border: 'none',
           zIndex: 1
         }}
-        src={videoUrl}
-        title="Roulette Masterclass Tutorial"
+        src={embedUrl}
+        title="Game Tutorial Video"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowFullScreen
       />
@@ -131,10 +154,10 @@ const YouTubeVideo = ({ videoUrl }) => {
 const MemoizedTabPanel = React.memo(TabPanel);
 const MemoizedYouTubeVideo = React.memo(YouTubeVideo);
 
-// Lazy loaded tab contents
-const BettingOptionsContent = lazy(() => import('./BettingTable'));
-const GameHistoryContent = lazy(() => import('./GameHistory'));
-const FAQContent = lazy(() => import('./FAQContent'));
+// Lazy loaded tab contents - commented out as they're not currently used
+// const BettingOptionsContent = lazy(() => import('./BettingTable'));
+// const GameHistoryContent = lazy(() => import('./GameHistory'));
+// const FAQContent = lazy(() => import('./FAQContent'));
 
 const GameDetail = ({ gameData = {}, bettingTableData = {}, showBettingTable = true, showProbabilities = true }) => {
   const [activeTab, setActiveTab] = useState(0);
@@ -360,7 +383,7 @@ const GameDetail = ({ gameData = {}, bettingTableData = {}, showBettingTable = t
                   About {gameData.title || 'Game'}
                 </Typography>
                 
-                {gameData.paragraphs && gameData.paragraphs.map((paragraph, index) => (
+                {gameData.paragraphs && Array.isArray(gameData.paragraphs) && gameData.paragraphs.map((paragraph, index) => (
                   <Typography 
                     key={index} 
                     variant="body1" 
