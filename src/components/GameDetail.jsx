@@ -151,8 +151,9 @@ const YouTubeVideo = ({ videoUrl }) => {
 };
 
 // Memoized components for better performance
-const MemoizedTabPanel = React.memo(TabPanel);
-const MemoizedYouTubeVideo = React.memo(YouTubeVideo);
+// Only memoize if the component is actually a function
+const MemoizedTabPanel = React.memo && typeof TabPanel === 'function' ? React.memo(TabPanel) : TabPanel;
+const MemoizedYouTubeVideo = React.memo && typeof YouTubeVideo === 'function' ? React.memo(YouTubeVideo) : YouTubeVideo;
 
 // Lazy loaded tab contents - commented out as they're not currently used
 // const BettingOptionsContent = lazy(() => import('./BettingTable'));
